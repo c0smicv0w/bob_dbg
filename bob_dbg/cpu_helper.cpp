@@ -20,6 +20,7 @@ set_break_point(
 
 	SIZE_T cb_rw = 0;
 	unsigned char temp = 0;
+	
 	BOOL ret = ReadProcessMemory(
 		param->hproc,
 		(LPCVOID)address,
@@ -257,4 +258,89 @@ clear_break_point(
 	}
 
 	return (TRUE == ret) ? true : false;
+}
+
+
+bool
+set_single_step(
+	_In_ ch_param* param
+	)
+{
+	_ASSERTE(NULL != param);
+	if (NULL == param) return false;
+
+	param->context.EFlags |= TF_BIT;
+	if (TRUE != SetThreadContext(param->hthread, &param->context))
+	{
+		log(
+			"SetThreadContext(hthread=0x%08x), gle = %u",
+			param->hthread,
+			GetLastError()
+			);
+			return false;
+	}
+
+	return true;
+}
+
+/**
+* @brief
+* @param
+* @see
+* @remarks
+* @code
+* @endcode
+* @return
+**/
+bool
+clear_single_step(
+	_In_ ch_param* param
+	)
+{
+	_ASSERTE(NULL != param);
+	if (NULL == param) return false;
+
+	param->context.EFlags &= ~TF_BIT;
+	if (TRUE != SetThreadContext(param->hthread, &param->context))
+	{
+		log(
+			"SetThreadContext(hthread=0x%08x), gle = %u",
+			param->hthread,
+			GetLastError()
+			);
+			return false;
+	}
+
+	return true;
+}
+
+
+/**
+* @brief
+* @param
+* @see
+* @remarks
+* @code
+* @endcode
+* @return
+**/
+bool set_last_branch_enable(_In_ ch_param* param)
+{
+	_ASSERTE(NULL != param);
+	if (NULL == param) return false;
+
+	param->context.EFlags |= TF_BIT;
+	//	param->context.Dr7		|= (DR7_LAST_BRANCH | DR7_TRACE_BRANCH);
+	param->context.Dr7 |= (DR7_TRACE_BRANCH);
+	if (TRUE != SetThreadContext(param->hthread, &param->context))
+	{
+		log(
+			"SetThreadContext(hthread=0x%08x), gle = %u",
+			param->hthread,
+			GetLastError()
+			);
+			return false;
+	}
+
+	return true;
 }
